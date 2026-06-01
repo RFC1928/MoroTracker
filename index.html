@@ -302,7 +302,7 @@ const EXERCISE_LINKS = {
   "Duck and Pigeon Hops": "https://brain-sync.net/exercises/moro/duck-and-pigeon-hops/",
 };
 
-// ── STORAGE ────────────────────────────────────────────────────
+// -- STORAGE --
 function load() {
   try { return JSON.parse(localStorage.getItem('moroTracker') || 'null'); }
   catch(e) { return null; }
@@ -324,7 +324,7 @@ let state = load() || initData();
 if (!state.forgivenDays) state.forgivenDays = [];
 if (state.forgivenUsed === undefined) state.forgivenUsed = false;
 
-// ── HELPERS ────────────────────────────────────────────────────
+// -- HELPERS --
 function getWeekForDate(dateStr) {
   const diff = daysBetween(state.startDate, dateStr);
   return Math.min(12, Math.floor(diff / 7) + 1);
@@ -374,7 +374,7 @@ function getStreak() {
   return streak;
 }
 
-// ── RENDER ─────────────────────────────────────────────────────
+// -- RENDER --
 function render() {
   const today = todayStr();
   const week = getWeekForDate(today);
@@ -493,4 +493,104 @@ function render() {
       el.addEventListener('click', () => openEditModal(s, d));
     }
 
-    el.innerHTML += `<span>${d.getDate()}</span><span class="dot-label">${['S','M','T','W','T','F','S'
+    el.innerHTML += `<span>${d.getDate()}</span><span class="dot-label">${['S','M','T','W','T','F','S'][d.getDay()]}</span>`;
+    grid.appendChild(el);
+  }
+
+  // Forgiveness button
+  const fbtn = document.getElementById('forgiveBtn');
+  const fstatus = document.getElementById('forgiveStatus');
+  fbtn.disabled = state.forgivenUsed;
+  if (state.forgivenUsed) {
+    const fd = state.forgivenDays[state.forgivenDays.length - 1];
+    fstatus.textContent = `🪄 Forgiveness used on ${fd ? new Date(fd+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'a past day'}`;
+    fstatus.className = 'forgive-status used';
+  } else {
+    fstatus.textContent = 'You have 1 forgiveness available';
+    fstatus.className = 'forgive-status';
+  }
+}
+
+// -- TOGGLE EXERCISE --
+function toggleExercise(date, exercise) {
+  if (!state.completedDays[date]) state.completedDays[date] = [];
+  const idx = state.completedDays[date].indexOf(exercise);
+  if (idx >= 0) state.completedDays[date].splice(idx, 1);
+  else state.completedDays[date].push(exercise);
+  save(state); render();
+}
+
+// -- EDIT MODAL --
+let _editDate = null;
+
+function openEditModal(dateStr, dateObj) {
+  _editDate = dateStr;
+  const w = getWeekForDate(dateStr);
+  const exercises = SCHEDULE[Math.min(12, Math.max(1, w))] || [];
+  document.getElementById('modalTitle').textContent =
+    dateObj.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  document.getElementById('modalSub').textContent = `Week ${w} exercises — tap to toggle`;
+
+  const container = document.getElementById('modalExercises');
+  container.innerHTML = '';
+  exercises.forEach(ex => {
+    const done = (state.completedDays[dateStr] || []).includes(ex);
+    const row = document.createElement('div');
+    row.className = 'modal-exercise-row';
+    row.innerHTML = `
+      <div class="check-circle ${done ? 'done' : ''}">${done ? '✓' : ''}</div>
+      <div class="exercise-name">${ex}</div>
+    `;
+    row.addEventListener('click', () => {
+      toggleExercise(dateStr, ex);
+      // re-render modal exercises in place
+      const c = row.querySelector('.check-circle');
+      const nowDone = (state.completedDays[dateStr] || []).includes(ex);
+      c.className = 'check-circle' + (nowDone ? ' done' : '');
+      c.textContent = nowDone ? '✓' : '';
+    });
+    container.appendChild(row);
+  });
+
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+}
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+  _editDate = null;
+  render();
+}
+
+// -- FORGIVENESS --
+function useForgiveness() {
+  if (state.forgivenUsed) return;
+  // Find the most recent missed day
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const s = d.toISOString().slice(0, 10);
+    if (s < state.startDate) break;
+    if (!isDayComplete(s) && !isForgiven(s)) {
+      state.forgivenDays.push(s);
+      state.forgivenUsed = true;
+      save(state);
+      render();
+      return;
+    }
+  }
+  alert('No recent missed days found to forgive!');
+}
+
+// -- RESET --
+function showReset() { document.getElementById('resetConfirm').classList.add('show'); }
+function hideReset() { document.getElementById('resetConfirm').classList.remove('show'); }
+function doReset() {
+  state = initData(); save(state); hideReset(); render();
+}
+
+render();
+</script>
+</body>
+</html>

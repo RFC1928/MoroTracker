@@ -18,6 +18,8 @@
     --warning-light: #fef3c7;
     --danger: #ef4444;
     --danger-light: #fee2e2;
+    --forgive: #a855f7;
+    --forgive-light: #f3e8ff;
     --text: #1e293b;
     --muted: #64748b;
     --border: #e2e8f0;
@@ -39,307 +41,168 @@
     color: #fff;
     padding: 28px 20px 20px;
     text-align: center;
-    position: relative;
   }
-  header h1 {
-    font-family: 'Nunito', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-  }
-  header p {
-    font-size: 0.85rem;
-    opacity: 0.82;
-    margin-top: 4px;
-  }
+  header h1 { font-family: 'Nunito', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
+  header p { font-size: 0.85rem; opacity: 0.82; margin-top: 4px; }
 
   .streak-bar {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-    background: rgba(255,255,255,0.15);
-    border-radius: 16px;
-    padding: 10px 18px;
-    margin: 14px auto 0;
-    max-width: 320px;
-    backdrop-filter: blur(4px);
+    display: flex; gap: 10px; justify-content: center; align-items: center;
+    background: rgba(255,255,255,0.15); border-radius: 16px; padding: 10px 18px;
+    margin: 14px auto 0; max-width: 320px; backdrop-filter: blur(4px);
   }
   .streak-bar .flame { font-size: 1.6rem; }
   .streak-bar .streak-info { text-align: left; }
-  .streak-bar .streak-num {
-    font-family: 'Nunito', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 900;
-    line-height: 1;
-  }
+  .streak-bar .streak-num { font-family: 'Nunito', sans-serif; font-size: 1.4rem; font-weight: 900; line-height: 1; }
   .streak-bar .streak-label { font-size: 0.75rem; opacity: 0.85; }
 
-  .danger-banner {
-    background: var(--danger);
-    color: #fff;
-    text-align: center;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: none;
+  .banner {
+    text-align: center; padding: 10px 16px; font-weight: 700; font-size: 0.9rem; display: none;
   }
-  .danger-banner.show { display: block; }
+  .banner.show { display: block; }
+  .banner.danger { background: var(--danger); color: #fff; }
+  .banner.warning { background: var(--warning); color: #fff; }
 
   .main { max-width: 480px; margin: 0 auto; padding: 20px 16px 0; }
 
   .section-label {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-    margin-top: 20px;
+    font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px; margin-top: 20px;
   }
 
   .week-card {
-    background: var(--card);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-    padding: 18px 18px 14px;
-    margin-bottom: 14px;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+    padding: 18px 18px 14px; margin-bottom: 14px;
   }
   .week-card .week-title {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 1.05rem;
-    color: var(--primary);
-    margin-bottom: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.05rem;
+    color: var(--primary); margin-bottom: 14px; display: flex;
+    justify-content: space-between; align-items: center;
   }
   .week-card .week-title span {
-    font-size: 0.78rem;
-    background: var(--primary-light);
-    color: var(--primary);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-weight: 700;
+    font-size: 0.78rem; background: var(--primary-light); color: var(--primary);
+    padding: 3px 10px; border-radius: 20px; font-weight: 700;
   }
 
   .exercise-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-    border-radius: 10px;
-    padding-left: 8px;
+    display: flex; align-items: center; gap: 14px; padding: 12px 8px;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+    transition: background 0.15s; border-radius: 10px;
   }
   .exercise-row:last-child { border-bottom: none; }
   .exercise-row:active { background: var(--primary-light); }
 
   .check-circle {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 2.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s;
-    font-size: 1.1rem;
+    width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all 0.2s; font-size: 1.1rem;
   }
-  .check-circle.done {
-    background: var(--success);
-    border-color: var(--success);
-    color: #fff;
-  }
+  .check-circle.done { background: var(--success); border-color: var(--success); color: #fff; }
 
   .exercise-info { flex: 1; }
-  .exercise-name {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 0.98rem;
-  }
-  .exercise-desc {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 1px;
-  }
+  .exercise-name { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.98rem; }
+  .exercise-desc { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
 
   .all-done-badge {
-    display: none;
-    background: var(--success-light);
-    color: #15803d;
-    text-align: center;
-    padding: 10px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-top: 10px;
+    display: none; background: var(--success-light); color: #15803d;
+    text-align: center; padding: 10px; border-radius: 12px;
+    font-weight: 700; font-size: 0.9rem; margin-top: 10px;
   }
   .all-done-badge.show { display: block; }
 
-  /* History dots */
-  .history-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    margin-top: 10px;
-  }
+  /* History grid */
+  .history-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
   .day-dot {
-    aspect-ratio: 1;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: var(--muted);
-    background: var(--border);
-    flex-direction: column;
-    gap: 1px;
+    aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 0.6rem; font-weight: 700; color: var(--muted);
+    background: var(--border); flex-direction: column; gap: 1px;
+    cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
   }
+  .day-dot:active { transform: scale(0.93); }
   .day-dot.done { background: var(--success); color: #fff; }
   .day-dot.missed { background: var(--danger-light); color: var(--danger); }
+  .day-dot.forgiven { background: var(--forgive-light); color: var(--forgive); outline: 2px solid var(--forgive); }
   .day-dot.today { outline: 2.5px solid var(--primary); outline-offset: 1px; }
   .day-dot .dot-label { font-size: 0.55rem; opacity: 0.75; }
+  .day-dot .forgive-icon { position: absolute; top: -4px; right: -4px; font-size: 0.6rem; }
 
-  /* Progress timeline */
-  .timeline {
-    display: flex;
-    overflow-x: auto;
-    gap: 0;
-    padding: 4px 0 8px;
-    scrollbar-width: none;
+  /* Edit modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 100; align-items: flex-end; justify-content: center;
   }
-  .timeline::-webkit-scrollbar { display: none; }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 24px 24px 0 0; width: 100%;
+    max-width: 480px; padding: 24px 20px 40px; box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+    animation: slideUp 0.22s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title {
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1.1rem;
+    margin-bottom: 6px; color: var(--primary);
+  }
+  .modal-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 18px; }
+  .modal-exercise-row {
+    display: flex; align-items: center; gap: 14px; padding: 13px 8px;
+    border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 10px;
+    transition: background 0.12s;
+  }
+  .modal-exercise-row:last-of-type { border-bottom: none; }
+  .modal-exercise-row:active { background: var(--primary-light); }
+  .modal-close {
+    width: 100%; padding: 13px; border: none; border-radius: 14px;
+    background: var(--border); color: var(--text); font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-top: 16px;
+  }
 
-  .week-pip {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 36px;
-  }
-  .week-pip .pip-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2.5px solid #fff;
-    z-index: 1;
-    transition: background 0.2s;
-    margin-bottom: 4px;
-  }
-  .week-pip .pip-dot.current { background: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-  .week-pip .pip-dot.completed { background: var(--success); }
-  .week-pip .pip-label { font-size: 0.6rem; color: var(--muted); font-weight: 700; }
-  .week-pip .pip-line {
-    position: absolute;
-    height: 2px;
-    background: var(--border);
-    top: 5px;
-    left: 50%;
-    width: calc(100%);
-    z-index: 0;
-  }
-  .week-line-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 24px;
-  }
-  .wl-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2.5px solid #fff;
-    z-index: 1;
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
+  /* Progress */
+  .week-line-wrap { position: relative; display: flex; align-items: center; width: 100%; height: 24px; }
+  .wl-dot { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid #fff; z-index: 1; flex-shrink: 0; transition: background 0.2s; }
   .wl-dot.future { background: var(--border); }
   .wl-dot.current { background: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
   .wl-dot.done { background: var(--success); }
-  .wl-line {
-    flex: 1;
-    height: 2.5px;
-    background: var(--border);
-  }
+  .wl-line { flex: 1; height: 2.5px; background: var(--border); }
   .wl-line.done { background: var(--success); }
 
-  /* Buttons */
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-  }
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
   .btn {
-    flex: 1;
-    padding: 13px;
-    border: none;
-    border-radius: 14px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
+    flex: 1; padding: 13px; border: none; border-radius: 14px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
   }
   .btn:active { opacity: 0.8; transform: scale(0.97); }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-danger { background: var(--danger-light); color: var(--danger); }
+  .btn-forgive { background: var(--forgive-light); color: var(--forgive); }
+  .btn-forgive:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .reset-confirm {
-    display: none;
-    background: var(--danger-light);
-    border-radius: 14px;
-    padding: 14px;
-    margin-top: 10px;
-    text-align: center;
+    display: none; background: var(--danger-light); border-radius: 14px;
+    padding: 14px; margin-top: 10px; text-align: center;
   }
   .reset-confirm.show { display: block; }
   .reset-confirm p { font-size: 0.88rem; font-weight: 600; color: var(--danger); margin-bottom: 10px; }
   .reset-confirm .btn-row { margin-top: 0; }
 
-  .card {
-    background: var(--card);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-    padding: 18px;
-    margin-bottom: 14px;
-  }
+  .card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); padding: 18px; margin-bottom: 14px; }
 
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--muted);
-  }
-  .progress-bar-wrap {
-    background: var(--border);
-    border-radius: 99px;
-    height: 10px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    border-radius: 99px;
-    background: linear-gradient(90deg, var(--primary), #7c3aed);
-    transition: width 0.5s cubic-bezier(.4,0,.2,1);
-  }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.82rem; font-weight: 700; color: var(--muted); }
+  .progress-bar-wrap { background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #7c3aed); transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+
+  .forgive-status { font-size: 0.8rem; color: var(--muted); margin-top: 8px; text-align: center; }
+  .forgive-status.used { color: var(--forgive); font-weight: 700; }
+
+  .hint { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 8px; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>🧠 Moro Tracker</h1>
-  <p>Brain Sync Reflex Integration Program</p>
+  <p>Brain Sync Reflex Integration · <a href="https://rfc1928.github.io/MoroTracker/" style="color:rgba(255,255,255,0.7);font-size:0.8rem;">rfc1928.github.io/MoroTracker</a></p>
   <div class="streak-bar">
     <span class="flame">🔥</span>
     <div class="streak-info">
@@ -349,13 +212,10 @@
   </div>
 </header>
 
-<div class="danger-banner" id="dangerBanner">
-  ⚠️ You missed yesterday! Do today's exercises or you'll need to restart.
-</div>
+<div class="banner danger" id="dangerBanner"></div>
 
 <div class="main">
 
-  <!-- TODAY -->
   <div class="section-label">Today's Exercises</div>
   <div class="week-card" id="todayCard">
     <div class="week-title">
@@ -366,7 +226,6 @@
     <div class="all-done-badge" id="allDoneBadge">🎉 All done for today!</div>
   </div>
 
-  <!-- PROGRESS -->
   <div class="section-label">12-Week Progress</div>
   <div class="card">
     <div class="progress-label">
@@ -376,16 +235,22 @@
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
     </div>
-    <div class="timeline" id="weekTimeline" style="margin-top:16px;"></div>
+    <div style="display:flex;margin-top:16px;" id="weekTimeline"></div>
   </div>
 
-  <!-- LAST 14 DAYS -->
-  <div class="section-label">Last 14 Days</div>
-  <div class="card" id="historyCard">
+  <div class="section-label">Last 14 Days <span style="font-weight:400;font-size:0.7rem;letter-spacing:0;text-transform:none;margin-left:6px;">tap a day to edit</span></div>
+  <div class="card">
     <div class="history-grid" id="historyGrid"></div>
+    <div class="hint">Tap any past day to mark exercises as done or missed</div>
   </div>
 
-  <!-- ACTIONS -->
+  <div class="section-label">Streak Forgiveness</div>
+  <div class="card">
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">Use this once to pardon a missed day without resetting your streak. The missed day is marked forgiven and won't count against you.</p>
+    <button class="btn btn-forgive" id="forgiveBtn" onclick="useForgiveness()">🪄 Forgive a Missed Day</button>
+    <div class="forgive-status" id="forgiveStatus"></div>
+  </div>
+
   <div class="section-label">Actions</div>
   <div class="card">
     <div class="btn-row">
@@ -402,8 +267,17 @@
 
 </div>
 
+<!-- Edit Day Modal -->
+<div class="modal-overlay" id="editModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Edit Day</div>
+    <div class="modal-sub" id="modalSub">Tap exercises to toggle</div>
+    <div id="modalExercises"></div>
+    <button class="modal-close" onclick="closeEditModal()">Done</button>
+  </div>
+</div>
+
 <script>
-// ── SCHEDULE DATA ──────────────────────────────────────────────
 const SCHEDULE = {
   1:  ["Prayer Pose"],
   2:  ["Prayer Pose"],
@@ -428,70 +302,48 @@ const EXERCISE_LINKS = {
   "Duck and Pigeon Hops": "https://brain-sync.net/exercises/moro/duck-and-pigeon-hops/",
 };
 
-// ── STORAGE HELPERS ────────────────────────────────────────────
+// ── STORAGE ────────────────────────────────────────────────────
 function load() {
-  try {
-    return JSON.parse(localStorage.getItem('moroTracker') || 'null');
-  } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem('moroTracker') || 'null'); }
+  catch(e) { return null; }
 }
-
-function save(data) {
-  localStorage.setItem('moroTracker', JSON.stringify(data));
-}
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function daysBetween(a, b) {
-  // a, b are 'YYYY-MM-DD' strings
-  return Math.round((new Date(b) - new Date(a)) / 86400000);
-}
-
+function save(data) { localStorage.setItem('moroTracker', JSON.stringify(data)); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function daysBetween(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
 function initData() {
   return {
     startDate: todayStr(),
-    completedDays: {},  // { 'YYYY-MM-DD': ['Exercise1', 'Exercise2'] }
-    currentWeek: 1,
+    completedDays: {},   // 'YYYY-MM-DD': ['Ex1', ...]
+    forgivenDays: [],    // ['YYYY-MM-DD', ...]
+    forgivenUsed: false,
   };
 }
 
-// ── MAIN STATE ─────────────────────────────────────────────────
 let state = load() || initData();
+// migrate old saves
+if (!state.forgivenDays) state.forgivenDays = [];
+if (state.forgivenUsed === undefined) state.forgivenUsed = false;
 
+// ── HELPERS ────────────────────────────────────────────────────
 function getWeekForDate(dateStr) {
   const diff = daysBetween(state.startDate, dateStr);
   return Math.min(12, Math.floor(diff / 7) + 1);
 }
 
-function getStreak() {
-  let streak = 0;
-  let d = new Date();
-  // Check from yesterday backwards (today might not be done yet)
-  while (true) {
-    const s = d.toISOString().slice(0, 10);
-    if (s === todayStr()) { d.setDate(d.getDate() - 1); continue; }
-    const week = getWeekForDate(s);
-    if (week < 1) break;
-    const needed = SCHEDULE[week] || [];
-    const done = state.completedDays[s] || [];
-    if (needed.every(ex => done.includes(ex))) {
-      streak++;
-      d.setDate(d.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-  // Add today if done
-  const todayWeek = getWeekForDate(todayStr());
-  const todayNeeded = SCHEDULE[todayWeek] || [];
-  const todayDone = state.completedDays[todayStr()] || [];
-  if (todayNeeded.every(ex => todayDone.includes(ex))) streak++;
-  return streak;
+function isDayComplete(dateStr) {
+  const w = getWeekForDate(dateStr);
+  if (w < 1) return false;
+  const needed = SCHEDULE[w] || [];
+  const done = state.completedDays[dateStr] || [];
+  return needed.every(ex => done.includes(ex));
 }
 
+function isForgiven(dateStr) {
+  return state.forgivenDays.includes(dateStr);
+}
+
+// Consecutive missed days before today (forgiven days don't count)
 function getMissedDays() {
-  // How many consecutive days before today had incomplete exercises?
   const today = new Date();
   let missed = 0;
   for (let i = 1; i <= 2; i++) {
@@ -499,16 +351,27 @@ function getMissedDays() {
     d.setDate(d.getDate() - i);
     const s = d.toISOString().slice(0, 10);
     if (s < state.startDate) break;
-    const week = getWeekForDate(s);
-    const needed = SCHEDULE[week] || [];
-    const done = state.completedDays[s] || [];
-    if (!needed.every(ex => done.includes(ex))) {
-      missed++;
-    } else {
-      break;
-    }
+    if (isForgiven(s)) break; // forgiven day stops the streak-break chain
+    if (!isDayComplete(s)) { missed++; } else { break; }
   }
   return missed;
+}
+
+function getStreak() {
+  let streak = 0;
+  let d = new Date();
+  while (true) {
+    const s = d.toISOString().slice(0, 10);
+    if (s === todayStr()) { d.setDate(d.getDate() - 1); continue; }
+    if (s < state.startDate) break;
+    if (isDayComplete(s) || isForgiven(s)) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else { break; }
+  }
+  // count today if complete
+  if (isDayComplete(todayStr())) streak++;
+  return streak;
 }
 
 // ── RENDER ─────────────────────────────────────────────────────
@@ -518,11 +381,10 @@ function render() {
   const exercises = SCHEDULE[Math.min(12, Math.max(1, week))] || [];
   const doneFull = state.completedDays[today] || [];
 
-  // Week / date label
   document.getElementById('weekLabel').textContent = `Week ${week}`;
   document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' });
 
-  // Exercises list
+  // Today's exercise list
   const list = document.getElementById('exerciseList');
   list.innerHTML = '';
   exercises.forEach(ex => {
@@ -536,44 +398,40 @@ function render() {
         <div class="exercise-desc"><a href="${EXERCISE_LINKS[ex]||'#'}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.75rem;">View instructions ↗</a></div>
       </div>
     `;
-    row.addEventListener('click', (e) => {
-      if (e.target.tagName === 'A') return;
-      toggleExercise(today, ex);
-    });
+    row.addEventListener('click', (e) => { if (e.target.tagName === 'A') return; toggleExercise(today, ex); });
     list.appendChild(row);
   });
 
-  // All done badge
   const allDone = exercises.every(ex => doneFull.includes(ex));
   document.getElementById('allDoneBadge').classList.toggle('show', allDone);
 
   // Streak
-  const streak = getStreak();
-  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('streakNum').textContent = getStreak();
 
-  // Danger banner
+  // Banner
   const missed = getMissedDays();
   const banner = document.getElementById('dangerBanner');
+  banner.className = 'banner';
   if (missed >= 2) {
-    banner.textContent = '🚨 You missed 2 days — program reset! Starting from Week 1.';
-    banner.classList.add('show');
-    // Auto-reset
-    if (week > 1 && !state._shownReset) {
-      state.startDate = todayStr();
-      state.completedDays = {};
-      state._shownReset = true;
-      save(state);
-      setTimeout(() => { state._shownReset = false; save(state); render(); }, 3000);
-      return;
+    banner.textContent = '🚨 2 days missed — program has been reset. Starting from Week 1.';
+    banner.classList.add('show', 'danger');
+    if (!state._resetDone) {
+      state._resetDone = true; save(state);
+      setTimeout(() => {
+        const fd = state.forgivenDays; const fu = state.forgivenUsed;
+        state = initData(); state.forgivenDays = fd; state.forgivenUsed = fu;
+        save(state); render();
+      }, 2500);
     }
   } else if (missed === 1) {
-    banner.textContent = '⚠️ You missed yesterday! Do today\'s exercises or you\'ll need to restart.';
-    banner.classList.add('show');
+    banner.textContent = '⚠️ You missed yesterday! Do today\'s or use Streak Forgiveness below.';
+    banner.classList.add('show', 'warning');
+    state._resetDone = false;
   } else {
-    banner.classList.remove('show');
+    state._resetDone = false;
   }
 
-  // Progress bar
+  // Progress
   const pct = Math.round(((week - 1) / 12) * 100);
   document.getElementById('progressText').textContent = `Week ${week} of 12`;
   document.getElementById('progressPct').textContent = pct + '%';
@@ -584,8 +442,7 @@ function render() {
   tl.innerHTML = '';
   for (let w = 1; w <= 12; w++) {
     const wrap = document.createElement('div');
-    wrap.className = 'week-line-wrap';
-    wrap.style.flex = '1';
+    wrap.className = 'week-line-wrap'; wrap.style.flex = '1';
     const dot = document.createElement('div');
     dot.className = 'wl-dot ' + (w < week ? 'done' : w === week ? 'current' : 'future');
     const label = document.createElement('div');
@@ -593,16 +450,12 @@ function render() {
     label.textContent = 'W' + w;
     const col = document.createElement('div');
     col.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1;';
-    col.appendChild(dot);
-    col.appendChild(label);
+    col.appendChild(dot); col.appendChild(label);
     if (w < 12) {
       const line = document.createElement('div');
       line.className = 'wl-line ' + (w < week ? 'done' : '');
-      wrap.appendChild(col);
-      wrap.appendChild(line);
-    } else {
-      wrap.appendChild(col);
-    }
+      wrap.appendChild(col); wrap.appendChild(line);
+    } else { wrap.appendChild(col); }
     tl.appendChild(wrap);
   }
 
@@ -610,59 +463,34 @@ function render() {
   const grid = document.getElementById('historyGrid');
   grid.innerHTML = '';
   for (let i = 13; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     const s = d.toISOString().slice(0, 10);
     const isToday = (s === today);
-    const w = getWeekForDate(s);
-    if (w < 1 || s < state.startDate) {
-      const el = document.createElement('div');
-      el.className = 'day-dot';
-      el.innerHTML = `<span>${d.getDate()}</span><span class="dot-label">${['S','M','T','W','T','F','S'][d.getDay()]}</span>`;
-      el.style.opacity = '0.35';
-      grid.appendChild(el);
-      continue;
-    }
-    const needed = SCHEDULE[Math.min(12, w)] || [];
-    const done2 = state.completedDays[s] || [];
-    const complete = needed.every(ex => done2.includes(ex));
     const future = s > today;
+    const w = getWeekForDate(s);
     const el = document.createElement('div');
-    el.className = 'day-dot' + (complete ? ' done' : (!future && s >= state.startDate ? ' missed' : '')) + (isToday ? ' today' : '');
-    el.innerHTML = `<span>${d.getDate()}</span><span class="dot-label">${['S','M','T','W','T','F','S'][d.getDay()]}</span>`;
-    if (future) el.style.opacity = '0.35';
-    grid.appendChild(el);
-  }
-}
 
-function toggleExercise(date, exercise) {
-  if (!state.completedDays[date]) state.completedDays[date] = [];
-  const idx = state.completedDays[date].indexOf(exercise);
-  if (idx >= 0) {
-    state.completedDays[date].splice(idx, 1);
-  } else {
-    state.completedDays[date].push(exercise);
-  }
-  save(state);
-  render();
-}
+    if (w < 1 || s < state.startDate) {
+      el.className = 'day-dot'; el.style.opacity = '0.35';
+    } else if (future) {
+      el.className = 'day-dot'; el.style.opacity = '0.35';
+    } else {
+      const complete = isDayComplete(s);
+      const forgiven = isForgiven(s);
+      let cls = 'day-dot';
+      if (forgiven) cls += ' forgiven';
+      else if (complete) cls += ' done';
+      else cls += ' missed';
+      if (isToday) cls += ' today';
+      el.className = cls;
+      // Add forgive icon
+      if (forgiven) {
+        const fi = document.createElement('span');
+        fi.className = 'forgive-icon'; fi.textContent = '🪄';
+        el.appendChild(fi);
+      }
+      // Tap to edit past days (or today)
+      el.addEventListener('click', () => openEditModal(s, d));
+    }
 
-function showReset() {
-  document.getElementById('resetConfirm').classList.add('show');
-}
-function hideReset() {
-  document.getElementById('resetConfirm').classList.remove('show');
-}
-function doReset() {
-  state = initData();
-  save(state);
-  hideReset();
-  render();
-}
-
-// ── INIT ───────────────────────────────────────────────────────
-render();
-</script>
-</body>
-  </html>
-  
+    el.innerHTML += `<span>${d.getDate()}</span><span class="dot-label">${['S','M','T','W','T','F','S'

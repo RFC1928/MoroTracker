@@ -518,7 +518,60 @@ function load() {
   try { return JSON.parse(localStorage.getItem('moroTracker') || 'null'); }
   catch(e) { return null; }
 }
-function save(data) { localStorage.setItem('moroTracker', JSON.stringify(data)); }
+function save(data) {
+  localStorage.setItem('moroTracker', JSON.stringify(data)); // instant local cache
+  pushRemote(data);                                          // best-effort cloud sync
+}
+
+// -- CLOUD SYNC (Tailscale-only backend) --
+// Set this to your Tailscale HTTPS endpoint, e.g. 'https://moro.your-tailnet.ts.net'
+// Leave '' to run localStorage-only (this is also the automatic offline fallback).
+const SYNC_ENDPOINT = 'https://socks_gcp.piranha-mine.ts.net.ts.net';   // no trailing slash, no /state
+let syncTimer = null;
+
+function pushRemote(data) {
+  if (!SYNC_ENDPOINT) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    fetch(SYNC_ENDPOINT + '/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).catch(() => {}); // offline: local already saved; next load reconciles
+  }, 800);
+}
+
+// Additive union merge — safe across devices (completions are only ever added).
+function mergeState(a, b) {
+  const out = {
+    startDate: (a.startDate && b.startDate)
+      ? (a.startDate < b.startDate ? a.startDate : b.startDate)
+      : (a.startDate || b.startDate),
+    completedDays: {},
+    forgivenDays: Array.from(new Set([...(a.forgivenDays||[]), ...(b.forgivenDays||[])])),
+    forgivenUsed: !!(a.forgivenUsed || b.forgivenUsed),
+  };
+  for (const src of [a, b]) {
+    const cd = src.completedDays || {};
+    for (const day in cd) {
+      out.completedDays[day] = Array.from(new Set([...(out.completedDays[day]||[]), ...cd[day]]));
+    }
+  }
+  return out;
+}
+
+async function syncFromRemote() {
+  if (!SYNC_ENDPOINT) return;
+  try {
+    const res = await fetch(SYNC_ENDPOINT + '/state', { cache: 'no-store' });
+    if (!res.ok) return;
+    const remote = await res.json();
+    if (!remote || !remote.startDate) { pushRemote(state); return; } // remote empty: seed it
+    state = mergeState(remote, state);
+    save(state);   // persist merged locally + push merged back up
+    render();
+  } catch (e) { /* offline: stay on localStorage */ }
+}
 
 function todayStr() {
   const d = new Date();
@@ -1035,6 +1088,7 @@ function doResetFromModal() {
 }
 
 render();
+syncFromRemote();
 </script>
 </body>
 </html>

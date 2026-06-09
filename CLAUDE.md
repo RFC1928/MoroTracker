@@ -37,7 +37,19 @@ All state is stored in `localStorage` under the key `'moroTracker'` as a JSON st
 }
 ```
 
-State is loaded at startup and written back on every user action via a `saveState()` call.
+State is loaded at startup and written back on every user action via a `save()` call.
+
+### Optional cloud sync (`sync-backend/`)
+
+localStorage remains the source of truth and offline fallback. An **optional**
+sync layer (the `SYNC_ENDPOINT` const in `index.html`, empty by default = disabled)
+mirrors state to a tiny zero-dependency Python server (`sync-backend/server.py`)
+that runs on a free GCP e2-micro VM, reachable **only over a Tailscale tailnet**
+via `tailscale serve` (HTTPS, no auth — privacy comes from tailnet membership).
+`save()` pushes to the endpoint (debounced); `syncFromRemote()` pulls on load and
+does an **additive union merge** (`mergeState()`) so completions are never lost
+across devices. See `sync-backend/SETUP.md`. The app stays zero-dependency and
+fully functional with sync disabled.
 
 ### Exercise Schedule
 

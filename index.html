@@ -526,7 +526,7 @@ function save(data) {
 // -- CLOUD SYNC (Tailscale-only backend) --
 // Set this to your Tailscale HTTPS endpoint, e.g. 'https://moro.your-tailnet.ts.net'
 // Leave '' to run localStorage-only (this is also the automatic offline fallback).
-const SYNC_ENDPOINT = '';
+const SYNC_ENDPOINT = 'https://socks_gcp.piranha-mine.ts.net.ts.net';   // no trailing slash, no /state
 let syncTimer = null;
 
 function pushRemote(data) {

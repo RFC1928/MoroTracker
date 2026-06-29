@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Tiny zero-dependency state store for MoroTracker.
+"""Tiny zero-dependency app server + state store for MoroTracker.
 
-Runs on a free GCP e2-micro VM behind `tailscale serve`, so it is reachable
-ONLY from devices on your tailnet, over HTTPS, with no password.
+Self-hosted in a Docker container on docker01, fronted by the shared Caddy
+reverse proxy (Caddy terminates TLS and proxies to `moro:8787`). One process
+serves both the static single-page app and its JSON state, so the browser talks
+to a single same-origin endpoint — no CORS, no separate API host.
 
 Endpoints:
-  GET  /state  -> current JSON blob (or {} if nothing stored yet)
-  PUT  /state  -> overwrite the JSON blob
+  GET  /            -> the app (static index.html)
+  GET  /index.html  -> same
+  GET  /state       -> current JSON blob (or {} if nothing stored yet)
+  PUT  /state       -> overwrite the JSON blob
 
 Config via environment variables:
-  MORO_DATA    path to the JSON file        (default: ~/moro-state.json)
-  MORO_ORIGIN  allowed browser origin       (default: https://rfc1928.github.io)
-  MORO_PORT    localhost port to listen on  (default: 8787)
+  MORO_DATA    path to the JSON state file   (default: ~/moro-state.json)
+  MORO_STATIC  path to index.html to serve   (default: ./index.html)
+  MORO_ORIGIN  allowed browser origin        (default: * — same-origin in prod)
+  MORO_PORT    port to listen on             (default: 8787)
 """
 import json
 import os
@@ -19,7 +24,9 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DATA_FILE = os.environ.get('MORO_DATA', os.path.expanduser('~/moro-state.json'))
-ALLOW_ORIGIN = os.environ.get('MORO_ORIGIN', 'https://rfc1928.github.io')
+STATIC_FILE = os.environ.get(
+    'MORO_STATIC', os.path.join(os.path.dirname(__file__), 'index.html'))
+ALLOW_ORIGIN = os.environ.get('MORO_ORIGIN', '*')
 PORT = int(os.environ.get('MORO_PORT', '8787'))
 
 
@@ -37,7 +44,21 @@ class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._empty(204)
 
+    def _serve_static(self):
+        try:
+            with open(STATIC_FILE, 'rb') as f:
+                body = f.read()
+        except FileNotFoundError:
+            return self._empty(404)
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Cache-Control', 'no-cache')
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
+        if self.path in ('/', '/index.html'):
+            return self._serve_static()
         if self.path != '/state':
             return self._empty(404)
         try:
@@ -71,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    print(f'MoroTracker store on 127.0.0.1:{PORT}, data -> {DATA_FILE}', file=sys.stderr)
-    # Bind to localhost only; Tailscale Serve handles TLS + tailnet exposure.
-    ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()
+    print(f'MoroTracker on 0.0.0.0:{PORT}, data -> {DATA_FILE}, '
+          f'app -> {STATIC_FILE}', file=sys.stderr)
+    # Bind to all interfaces inside the container; only the Caddy reverse proxy
+    # on the shared `proxy` network can reach it (no published host port).
+    ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()

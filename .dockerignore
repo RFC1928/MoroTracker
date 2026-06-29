@@ -1,0 +1,7 @@
+.git
+.forgejo
+.claude
+*.md
+sync-backend/*.md
+sync-backend/.gitignore
+moro-state.json

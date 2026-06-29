@@ -1,0 +1,6 @@
+# Personal tracking data — the seed/backup blob. Lives on the moro_data volume
+# in production, never in git.
+moro-state.json
+
+# Local Claude settings
+.claude/settings.local.json

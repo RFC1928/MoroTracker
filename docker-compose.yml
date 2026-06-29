@@ -1,0 +1,35 @@
+services:
+  moro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # No published port — only Caddy talks to it, over the shared `proxy`
+    # network. Caddy reaches it at the `moro` alias (reverse_proxy moro:8787).
+    networks:
+      proxy:
+        aliases:
+          - moro
+    volumes:
+      - data:/app/data
+    # No TZ needed: the server does zero date math — it just stores the JSON
+    # blob. All streak / forgiveness / day-boundary logic runs client-side in the
+    # browser using each user's own local time.
+    restart: unless-stopped
+
+networks:
+  # The shared reverse-proxy network owned by the caddy stack. Created once on
+  # the host (`docker network create proxy`); Compose refuses to start until it
+  # exists, so the app can't come up detached from the proxy.
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  # The single moro-state.json lives in an EXTERNAL volume with a fixed name,
+  # decoupled from the compose project/directory. Compose refuses to start if it
+  # is missing rather than silently creating an empty one — so a deploy can never
+  # wipe the shared tracking data. Create + seed it once (see DEPLOY.md):
+  #   docker volume create moro_data
+  data:
+    external: true
+    name: moro_data

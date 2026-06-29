@@ -1,0 +1,44 @@
+name: Deploy Moro
+
+# Auto-deploy on every push to main. Runs on the self-hosted Forgejo Actions
+# runner registered on docker01 that has access to the host docker socket (the
+# same runner caddy + fcc use — see DEPLOY.md).
+on:
+  push:
+    branches: [main]
+  # Manual trigger from the Actions tab — for the first cutover and for
+  # re-deploying without a code change.
+  workflow_dispatch:
+
+# Never run two deploys at once; if a new push lands mid-deploy, the in-flight
+# one is cancelled so we always converge on the latest main.
+concurrency:
+  group: moro-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Must match the label given to the act_runner on docker01.
+    runs-on: docker01
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Ensure the shared proxy network exists
+        # moro joins the external `proxy` network (owned by the caddy stack) so
+        # Caddy can reach it. Create it if missing so the deploy is
+        # self-sufficient and order-independent.
+        run: docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
+
+      - name: Build image and (re)start the stack
+        # -p moro pins the compose project so the named state volume is reused on
+        # every deploy. NO `down`, and never `-v`, so the data volume is never
+        # removed. --remove-orphans cleans up stragglers.
+        run: docker compose -p moro up -d --build --remove-orphans
+
+      - name: Show running services
+        run: docker compose -p moro ps
+
+      - name: Prune dangling images
+        # Frees space from old image layers; does NOT touch volumes.
+        run: docker image prune -f

@@ -523,17 +523,18 @@ function save(data) {
   pushRemote(data);                                          // best-effort cloud sync
 }
 
-// -- CLOUD SYNC (Tailscale-only backend) --
-// Set this to your Tailscale HTTPS endpoint, e.g. 'https://moro.your-tailnet.ts.net'
-// Leave '' to run localStorage-only (this is also the automatic offline fallback).
-const SYNC_ENDPOINT = 'https://socks-gcp.piranha-mine.ts.net';   // no trailing slash, no /state
+// -- SHARED SYNC (same-origin backend) --
+// The app is served by its own container (server.py) which also exposes the
+// state API at /state on the same origin, so we just use a relative path — no
+// endpoint host, no CORS. localStorage stays the instant local cache + offline
+// fallback; /state is the shared source of truth everyone reads & merges into.
+const STATE_PATH = '/state';
 let syncTimer = null;
 
 function pushRemote(data) {
-  if (!SYNC_ENDPOINT) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
-    fetch(SYNC_ENDPOINT + '/state', {
+    fetch(STATE_PATH, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -561,9 +562,8 @@ function mergeState(a, b) {
 }
 
 async function syncFromRemote() {
-  if (!SYNC_ENDPOINT) return;
   try {
-    const res = await fetch(SYNC_ENDPOINT + '/state', { cache: 'no-store' });
+    const res = await fetch(STATE_PATH, { cache: 'no-store' });
     if (!res.ok) return;
     const remote = await res.json();
     if (!remote || !remote.startDate) { pushRemote(state); return; } // remote empty: seed it

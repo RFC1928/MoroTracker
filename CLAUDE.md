@@ -10,7 +10,11 @@ MoroTracker is a 12-week Moro Reflex Integration exercise tracking app ("Brain S
 
 **To run locally:** Open `index.html` directly in any modern browser. No server needed.
 
-**To deploy:** Push changes to `main` — the app is hosted on GitHub Pages at `https://rfc1928.github.io/MoroTracker/`.
+**To deploy:** Push changes to `main` on the Forgejo remote
+(`ssh://git@docker01:222/mark/moro.git`). A Forgejo Actions workflow
+(`.forgejo/workflows/deploy.yml`) runs on the self-hosted `docker01` runner and
+`docker compose -p moro up -d --build`s the stack behind the shared Caddy reverse
+proxy at `https://moro.marksocks.com`. See `DEPLOY.md`.
 
 There are no lint, build, or test commands.
 
@@ -39,17 +43,19 @@ All state is stored in `localStorage` under the key `'moroTracker'` as a JSON st
 
 State is loaded at startup and written back on every user action via a `save()` call.
 
-### Optional cloud sync (`sync-backend/`)
+### Shared sync (`sync-backend/`)
 
-localStorage remains the source of truth and offline fallback. An **optional**
-sync layer (the `SYNC_ENDPOINT` const in `index.html`, empty by default = disabled)
-mirrors state to a tiny zero-dependency Python server (`sync-backend/server.py`)
-that runs on a free GCP e2-micro VM, reachable **only over a Tailscale tailnet**
-via `tailscale serve` (HTTPS, no auth — privacy comes from tailnet membership).
-`save()` pushes to the endpoint (debounced); `syncFromRemote()` pulls on load and
-does an **additive union merge** (`mergeState()`) so completions are never lost
-across devices. See `sync-backend/SETUP.md`. The app stays zero-dependency and
-fully functional with sync disabled.
+localStorage is the instant local cache and offline fallback; the **shared**
+source of truth is a single JSON file (`moro-state.json`) served by a tiny
+zero-dependency Python server (`sync-backend/server.py`). That same server also
+serves `index.html`, so the app and its `/state` API are **same-origin** — the
+frontend just fetches the relative path `STATE_PATH = '/state'` (no
+`SYNC_ENDPOINT` host, no CORS). `save()` pushes to `/state` (debounced via
+`pushRemote`); `syncFromRemote()` pulls on load and does an **additive union
+merge** (`mergeState()`) so completions are never lost across devices. In
+production the server runs in a Docker container on docker01 behind Caddy, with
+`moro-state.json` on the persistent `moro_data` volume (see `DEPLOY.md`). The app
+still works fully offline from localStorage when `/state` is unreachable.
 
 ### Exercise Schedule
 

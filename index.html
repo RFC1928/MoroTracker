@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Moro Exercise Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap');
 
@@ -37,6 +38,7 @@
   }
 
   header {
+    position: relative;
     background: var(--primary);
     color: #fff;
     padding: 28px 20px 20px;
@@ -45,12 +47,49 @@
   header h1 { font-family: 'Nunito', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
   header p { font-size: 0.85rem; opacity: 0.82; margin-top: 4px; }
 
+  .sound-toggle {
+    position: absolute; top: 14px; right: 14px;
+    background: rgba(255,255,255,0.15); border: none; color: #fff;
+    width: 38px; height: 38px; border-radius: 50%; font-size: 1.1rem;
+    cursor: pointer; line-height: 1; transition: transform 0.15s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sound-toggle:hover { background: rgba(255,255,255,0.28); }
+  .sound-toggle:active { transform: scale(0.88); }
+  .sound-toggle.muted { opacity: 0.6; }
+
   .streak-bar {
     display: flex; gap: 10px; justify-content: center; align-items: center;
     background: rgba(255,255,255,0.15); border-radius: 16px; padding: 10px 18px;
     margin: 14px auto 0; max-width: 320px; backdrop-filter: blur(4px);
   }
-  .streak-bar .flame { font-size: 1.6rem; }
+  /* Growing streak fire — size + glow scale up by tier (set on #streakFlame). */
+  .streak-bar .flame {
+    font-size: 1.6rem; line-height: 1; display: inline-block;
+    transition: font-size 0.4s ease, filter 0.4s ease;
+    transform-origin: bottom center;
+  }
+  .streak-bar .flame.lit { animation: flameFlicker 1.6s ease-in-out infinite; }
+  .streak-bar .flame.tier1 { font-size: 1.5rem; }
+  .streak-bar .flame.tier2 { font-size: 1.85rem; filter: drop-shadow(0 0 5px rgba(245,158,11,0.7)); }
+  .streak-bar .flame.tier3 { font-size: 2.15rem; filter: drop-shadow(0 0 9px rgba(245,158,11,0.85)); }
+  .streak-bar .flame.tier4 { font-size: 2.5rem; filter: drop-shadow(0 0 14px rgba(239,68,68,0.9)); }
+  .streak-bar .flame.tier4.lit { animation: flameRoar 1.1s ease-in-out infinite; }
+  @keyframes flameFlicker {
+    0%, 100% { transform: scale(1) rotate(-1.5deg); }
+    50%      { transform: scale(1.08) rotate(1.5deg); }
+  }
+  @keyframes flameRoar {
+    0%, 100% { transform: scale(1) rotate(-2.5deg); }
+    25%      { transform: scale(1.12) rotate(2deg); }
+    60%      { transform: scale(1.05) rotate(-1.5deg); }
+  }
+  @keyframes flamePop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.6); }
+    100% { transform: scale(1); }
+  }
+  .streak-bar .flame.bump { animation: flamePop 0.5s ease-out; }
   .streak-bar .streak-info { text-align: left; }
   .streak-bar .streak-num { font-family: 'Nunito', sans-serif; font-size: 1.4rem; font-weight: 900; line-height: 1; }
   .streak-bar .streak-label { font-size: 0.75rem; opacity: 0.85; }
@@ -234,6 +273,36 @@
     50% { transform: scale(1.08); box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
     100% { transform: scale(1); box-shadow: 0 0 12px rgba(168, 85, 247, 0.3); }
   }
+  /* A token just appeared (earned) — pop it in with a spin. */
+  .token-slot.earned { animation: tokenEarn 0.7s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes tokenEarn {
+    0%   { transform: scale(0.2) rotate(-90deg); opacity: 0; }
+    60%  { transform: scale(1.35) rotate(8deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  /* A token was just spent — drain it out. */
+  .token-slot.spent { animation: tokenSpend 0.55s ease-in forwards; }
+  @keyframes tokenSpend {
+    0%   { transform: scale(1); opacity: 1; }
+    40%  { transform: scale(1.3); filter: brightness(1.6); }
+    100% { transform: scale(0.3); opacity: 0.2; }
+  }
+  /* The wand button — give it a little idle shimmer when usable. */
+  .btn-forgive:not(:disabled) { position: relative; overflow: hidden; }
+  .btn-forgive.casting { animation: wandCast 0.6s ease-out; }
+  @keyframes wandCast {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(0.94) rotate(-2deg); }
+    60%  { transform: scale(1.05) rotate(2deg); }
+    100% { transform: scale(1); }
+  }
+  /* A day dot that was just pardoned by the wand — shimmer it in. */
+  .day-dot.just-forgiven { animation: dayShimmer 1s ease-out; }
+  @keyframes dayShimmer {
+    0%   { transform: scale(1); box-shadow: 0 0 0 rgba(168,85,247,0); }
+    30%  { transform: scale(1.4); box-shadow: 0 0 22px rgba(168,85,247,0.9); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(168,85,247,0); }
+  }
 
   /* Streak Milestone Animations */
   @keyframes pulseFlame {
@@ -255,10 +324,11 @@
 <canvas id="confettiCanvas" style="position: fixed; inset: 0; pointer-events: none; z-index: 9999; width: 100vw; height: 100vh;"></canvas>
 
 <header>
+  <button id="soundToggle" class="sound-toggle" onclick="toggleSound()" aria-label="Toggle sound" title="Toggle sound">🔊</button>
   <h1>🧠 Moro Tracker</h1>
-  <p>Brain Sync Reflex Integration · <a href="https://rfc1928.github.io/MoroTracker/" style="color:rgba(255,255,255,0.7);font-size:0.8rem;">rfc1928.github.io/MoroTracker</a></p>
+  <p>Brain Sync Reflex Integration</p>
   <div class="streak-bar">
-    <span class="flame">🔥</span>
+    <span class="flame" id="streakFlame">🔥</span>
     <div class="streak-info">
       <div class="streak-num" id="streakNum">0</div>
       <div class="streak-label">day streak — miss 2 days = restart!</div>
@@ -300,7 +370,7 @@
 
   <div class="section-label">Streak Forgiveness</div>
   <div class="card">
-    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">Earn 1 forgiveness token for every 7-day streak, up to 2 banked at once. Using one pardons your most recent missed day without breaking your streak.</p>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">Earn 1 magic wand 🪄 for every 14 days straight without a single missed day, up to 2 banked at once. Waving one pardons your most recent missed day without breaking your streak.</p>
     
     <!-- Visual Tokens Display -->
     <div class="tokens-display" style="display: flex; justify-content: center; gap: 20px; margin: 16px 0;">
@@ -385,6 +455,16 @@ const EXERCISE_LINKS = {
   "Duck and Pigeon Hops": "https://brain-sync.net/exercises/moro/duck-and-pigeon-hops/",
 };
 
+// Video demos. Brain Sync's own Moro video library is the authoritative source
+// (and the per-exercise instruction pages above embed their demo videos too);
+// a couple of exercises also have a clearly-matching standalone YouTube clip.
+const MORO_VIDEO_HUB = "https://brain-sync.net/exercise-videos/moro-exercises/";
+const EXERCISE_VIDEOS = {
+  "Starfish": "https://www.youtube.com/watch?v=DscNPV9jHnE",
+  "Duck and Pigeon Hops": "https://www.youtube.com/watch?v=y_1JpivqsUM",
+};
+function videoLinkFor(ex) { return EXERCISE_VIDEOS[ex] || MORO_VIDEO_HUB; }
+
 // -- CANVAS CONFETTI & PARTICLES --
 const canvas = document.getElementById('confettiCanvas');
 const ctx = canvas.getContext('2d');
@@ -398,30 +478,137 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
+// -- SOUND (Web Audio, zero-dep) & HAPTICS --
+// Sound is muted-by-pref (persisted). Haptics are independent of the mute
+// toggle (they're silent) and only fire where the device supports vibration.
+const Prefs = {
+  get muted() { return localStorage.getItem('moroSoundMuted') === '1'; },
+  set muted(v) { localStorage.setItem('moroSoundMuted', v ? '1' : '0'); },
+};
+
+let audioCtx = null;
+function ac() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  // AudioContext starts suspended until a user gesture; our callers are all
+  // click handlers, so resuming here unlocks playback on the first tap.
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// One short enveloped tone. `when` offsets the start (seconds) for melodies.
+function tone(freq, dur, type = 'sine', gain = 0.12, when = 0) {
+  const c = ac();
+  if (!c) return;
+  const t0 = c.currentTime + when;
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(g).connect(c.destination);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.03);
+}
+
+const Sound = {
+  tick()      { if (Prefs.muted) return; tone(660, 0.08, 'triangle', 0.10); },
+  complete()  { if (Prefs.muted) return; [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.12, i * 0.07)); },
+  wand()      { if (Prefs.muted) return; tone(900, 0.5, 'sine', 0.09); tone(1400, 0.5, 'sine', 0.05, 0.05);
+                for (let i = 0; i < 6; i++) tone(1100 + i * 230, 0.15, 'triangle', 0.045, 0.1 + i * 0.05); },
+  milestone() { if (Prefs.muted) return; [392, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.4, 'triangle', 0.13, i * 0.11)); },
+};
+
+function haptic(pattern) {
+  if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+}
+
+function toggleSound() {
+  Prefs.muted = !Prefs.muted;
+  updateSoundToggle();
+  if (!Prefs.muted) Sound.tick(); // audible confirmation on un-mute
+}
+function updateSoundToggle() {
+  const b = document.getElementById('soundToggle');
+  if (!b) return;
+  b.textContent = Prefs.muted ? '🔇' : '🔊';
+  b.classList.toggle('muted', Prefs.muted);
+}
+updateSoundToggle();
+
+function drawStar(ctx, cx, cy, spikes, outer, inner) {
+  let rot = (Math.PI / 2) * 3;
+  const step = Math.PI / spikes;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outer);
+  for (let i = 0; i < spikes; i++) {
+    ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer); rot += step;
+    ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner); rot += step;
+  }
+  ctx.lineTo(cx, cy - outer);
+  ctx.closePath();
+  ctx.fill();
+}
+
 class Particle {
   constructor(x, y, color, type = 'confetti') {
     this.x = x;
     this.y = y;
-    this.size = type === 'burst' ? Math.random() * 4 + 3 : Math.random() * 6 + 4;
     this.color = color;
     this.type = type;
-    
-    const angle = Math.random() * Math.PI * 2;
-    const speed = type === 'burst' ? Math.random() * 4 + 2.5 : Math.random() * 8 + 4;
-    
-    this.vx = Math.cos(angle) * speed;
-    this.vy = type === 'burst' ? Math.sin(angle) * speed : (Math.random() * -10 - 5);
-    
-    this.gravity = type === 'burst' ? 0.15 : 0.22;
-    this.drag = 0.98;
     this.alpha = 1;
-    this.decay = type === 'burst' ? Math.random() * 0.03 + 0.02 : Math.random() * 0.015 + 0.01;
+    this.drag = 0.98;
     this.rotation = Math.random() * 360;
     this.rotationSpeed = (Math.random() - 0.5) * 10;
-    this.shape = ['rect', 'circle', 'triangle'][Math.floor(Math.random() * 3)];
+    this.trail = [];
+    const angle = Math.random() * Math.PI * 2;
+
+    if (type === 'burst') {
+      this.size = Math.random() * 4 + 3;
+      const speed = Math.random() * 4 + 2.5;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed;
+      this.gravity = 0.15;
+      this.decay = Math.random() * 0.03 + 0.02;
+      this.shape = 'dot';
+    } else if (type === 'star') {
+      this.size = Math.random() * 7 + 6;
+      const speed = Math.random() * 5 + 2;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed - 1.5;
+      this.gravity = 0.08;
+      this.decay = Math.random() * 0.015 + 0.008;
+      this.shape = 'star';
+      this.twinkle = Math.random() * Math.PI * 2;
+    } else if (type === 'sparkle') {
+      this.size = Math.random() * 3 + 2;
+      const speed = Math.random() * 3 + 1.5;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed - 2;
+      this.gravity = 0.05;
+      this.decay = Math.random() * 0.02 + 0.012;
+      this.shape = 'spark';
+      this.twinkle = Math.random() * Math.PI * 2;
+    } else { // confetti
+      this.size = Math.random() * 6 + 4;
+      const speed = Math.random() * 8 + 4;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.random() * -10 - 5;
+      this.gravity = 0.22;
+      this.decay = Math.random() * 0.015 + 0.01;
+      this.shape = ['rect', 'circle', 'triangle'][Math.floor(Math.random() * 3)];
+    }
   }
-  
+
   update() {
+    if (this.shape === 'spark') {
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 6) this.trail.shift();
+    }
     this.vx *= this.drag;
     this.vy *= this.drag;
     this.vy += this.gravity;
@@ -429,35 +616,55 @@ class Particle {
     this.y += this.vy;
     this.alpha -= this.decay;
     this.rotation += this.rotationSpeed;
+    if (this.twinkle !== undefined) this.twinkle += 0.3;
     return this.alpha > 0;
   }
-  
+
+  _alpha() {
+    return this.twinkle === undefined ? this.alpha
+      : Math.max(0, this.alpha * (0.55 + 0.45 * Math.sin(this.twinkle)));
+  }
+
   draw() {
     ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate((this.rotation * Math.PI) / 180);
-    ctx.globalAlpha = this.alpha;
-    ctx.fillStyle = this.color;
-    
-    if (this.type === 'burst') {
-      ctx.beginPath();
-      ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      if (this.shape === 'rect') {
-        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.5);
-      } else if (this.shape === 'circle') {
+    if (this.shape === 'spark') {
+      for (let i = 0; i < this.trail.length; i++) {
+        const p = this.trail[i];
+        ctx.globalAlpha = this._alpha() * (i / this.trail.length) * 0.5;
+        ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(0, -this.size / 2);
-        ctx.lineTo(this.size / 2, this.size / 2);
-        ctx.lineTo(-this.size / 2, this.size / 2);
-        ctx.closePath();
+        ctx.arc(p.x, p.y, this.size * 0.6, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.globalAlpha = this._alpha();
+      ctx.shadowBlur = 8; ctx.shadowColor = this.color;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+    ctx.translate(this.x, this.y);
+    ctx.rotate((this.rotation * Math.PI) / 180);
+    ctx.globalAlpha = this.shape === 'star' ? this._alpha() : this.alpha;
+    ctx.fillStyle = this.color;
+
+    if (this.shape === 'dot') {
+      ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI * 2); ctx.fill();
+    } else if (this.shape === 'star') {
+      ctx.shadowBlur = 8; ctx.shadowColor = this.color;
+      drawStar(ctx, 0, 0, 5, this.size, this.size * 0.45);
+    } else if (this.shape === 'rect') {
+      ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.5);
+    } else if (this.shape === 'circle') {
+      ctx.beginPath(); ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2); ctx.fill();
+    } else { // triangle
+      ctx.beginPath();
+      ctx.moveTo(0, -this.size / 2);
+      ctx.lineTo(this.size / 2, this.size / 2);
+      ctx.lineTo(-this.size / 2, this.size / 2);
+      ctx.closePath(); ctx.fill();
     }
     ctx.restore();
   }
@@ -504,13 +711,27 @@ function spawnBurst(x, y, count = 25) {
   startAnimation();
 }
 
-function spawnMagicBurst(x, y, count = 35) {
-  const colors = ['#a855f7', '#c084fc', '#f3e8ff', '#e9d5ff', '#ec4899', '#ffffff'];
+function spawnStars(x, y, count = 14, colors) {
+  colors = colors || ['#f59e0b', '#fbbf24', '#fde68a', '#a855f7', '#ffffff'];
   for (let i = 0; i < count; i++) {
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    particles.push(new Particle(x, y, color, 'burst'));
+    particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)], 'star'));
   }
   startAnimation();
+}
+
+function spawnSparkles(x, y, count = 24, colors) {
+  colors = colors || ['#a855f7', '#c084fc', '#e9d5ff', '#fde68a', '#ffffff'];
+  for (let i = 0; i < count; i++) {
+    particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)], 'sparkle'));
+  }
+  startAnimation();
+}
+
+// The wand effect: a shower of purple/gold stars wrapped in a sparkle trail.
+function spawnMagicBurst(x, y, count = 35) {
+  const wandColors = ['#a855f7', '#c084fc', '#fbbf24', '#fde68a', '#ffffff'];
+  spawnStars(x, y, Math.round(count * 0.4), wandColors);
+  spawnSparkles(x, y, Math.round(count * 0.85), wandColors);
 }
 
 // -- STORAGE --
@@ -620,17 +841,21 @@ function isForgiven(dateStr) {
 
 function getForgivenessTokens() {
   const MAX = 2;
-  let streak = 0;
+  const EARN_EVERY = 14; // one wand per 2 full weeks without a single missed day
+  let cleanRun = 0;
   let earned = 0;
   let d = new Date(state.startDate + 'T12:00:00');
   const todayD = new Date(todayStr() + 'T12:00:00');
   while (d < todayD) {
     const s = toLocalYMD(d);
-    if (isDayComplete(s) || isForgiven(s)) {
-      streak++;
-      if (streak > 0 && streak % 7 === 0) earned++;
+    // Only genuinely-complete days build toward a new wand. A forgiven day was
+    // still a missed day, so it resets the earn run — you can't farm wands with
+    // wands.
+    if (isDayComplete(s)) {
+      cleanRun++;
+      if (cleanRun % EARN_EVERY === 0) earned++;
     } else {
-      streak = 0;
+      cleanRun = 0;
     }
     d.setDate(d.getDate() + 1);
   }
@@ -743,11 +968,10 @@ function showMilestoneModal(streak) {
   
   const modal = document.getElementById('milestoneModal');
   modal.classList.add('show');
-  
-  if (navigator.vibrate) {
-    navigator.vibrate([100, 50, 100, 50, 200]);
-  }
-  
+
+  Sound.milestone();
+  haptic([100, 50, 100, 50, 200]);
+
   let count = 0;
   const interval = setInterval(() => {
     if (!modal.classList.contains('show') || count > 4) {
@@ -757,6 +981,7 @@ function showMilestoneModal(streak) {
     const x = Math.random() * window.innerWidth;
     const y = Math.random() * (window.innerHeight * 0.6);
     spawnBurst(x, y, 30);
+    spawnStars(x, y, 8);
     count++;
   }, 400);
 }
@@ -771,6 +996,45 @@ function closeMilestoneModal(e) {
     dismissMilestoneModal();
   }
 }
+
+// -- RENDER HELPERS --
+// Trailing run of consecutive fully-complete days (forgiven days don't count),
+// used to show "next wand in N clean days". Mirrors getStreak() but stricter:
+// an incomplete today is skipped (not yet a miss), anything else breaks the run.
+function currentCleanRun() {
+  let run = 0;
+  let d = new Date();
+  while (true) {
+    const s = toLocalYMD(d);
+    if (s === todayStr() && !isDayComplete(s)) { d.setDate(d.getDate() - 1); continue; }
+    if (s < state.startDate) break;
+    if (isDayComplete(s)) { run++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return run;
+}
+
+// Growing streak fire: bigger, brighter flame at higher tiers + a pop when the
+// streak ticks up.
+let _lastStreak = null;
+function updateStreakFlame(streak) {
+  const f = document.getElementById('streakFlame');
+  if (!f) return;
+  let tier = 0;
+  if (streak >= 50) tier = 4;
+  else if (streak >= 21) tier = 3;
+  else if (streak >= 10) tier = 2;
+  else if (streak >= 3) tier = 1;
+  f.className = 'flame' + (tier > 0 ? ' lit tier' + tier : '');
+  if (_lastStreak !== null && streak > _lastStreak) {
+    void f.offsetWidth;
+    f.classList.add('bump');
+    setTimeout(() => f.classList.remove('bump'), 520);
+  }
+  _lastStreak = streak;
+}
+
+let _lastTokens = null;
 
 // -- RENDER --
 function render() {
@@ -793,7 +1057,7 @@ function render() {
       <div class="check-circle ${done ? 'done' : ''}">${done ? '✓' : ''}</div>
       <div class="exercise-info">
         <div class="exercise-name">${ex}</div>
-        <div class="exercise-desc"><a href="${EXERCISE_LINKS[ex]||'#'}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.75rem;">View instructions ↗</a></div>
+        <div class="exercise-desc"><a href="${EXERCISE_LINKS[ex]||'#'}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.75rem;">Instructions ↗</a> <span style="color:var(--border);">·</span> <a href="${videoLinkFor(ex)}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.75rem;">▶ Video</a></div>
       </div>
     `;
     row.addEventListener('click', (e) => { if (e.target.tagName === 'A') return; toggleExercise(today, ex, e); });
@@ -804,7 +1068,9 @@ function render() {
   document.getElementById('allDoneBadge').classList.toggle('show', allDone);
 
   // Streak
-  document.getElementById('streakNum').textContent = getStreak();
+  const streak = getStreak();
+  document.getElementById('streakNum').textContent = streak;
+  updateStreakFlame(streak);
 
   // Banner
   const missed = getMissedDays();
@@ -859,6 +1125,7 @@ function render() {
     const future = s > today;
     const w = getWeekForDate(s);
     const el = document.createElement('div');
+    el.dataset.date = s; // lets the wand target a specific day's dot
 
     const hasCompletions = state.completedDays[s] && state.completedDays[s].length > 0;
     const complete = isDayComplete(s);
@@ -923,18 +1190,26 @@ function render() {
     slot2.innerHTML = '<span style="font-size: 0.8rem; opacity: 0.35;">⚪</span>';
   }
 
+  // Celebrate a newly-earned wand: pop the slot + sparkle shower.
+  if (_lastTokens !== null && tokens > _lastTokens) {
+    const newSlot = tokens >= 2 ? slot2 : slot1;
+    newSlot.classList.remove('earned'); void newSlot.offsetWidth; newSlot.classList.add('earned');
+    const r = newSlot.getBoundingClientRect();
+    spawnSparkles(r.left + r.width / 2, r.top + r.height / 2, 18);
+  }
+  _lastTokens = tokens;
+
   // Forgiveness button
   const fbtn = document.getElementById('forgiveBtn');
   const fstatus = document.getElementById('forgiveStatus');
   fbtn.disabled = tokens === 0;
-  fbtn.textContent = tokens > 0 ? `🪄 Forgive a Missed Day (${tokens} available)` : '🪄 Forgive a Missed Day';
+  fbtn.textContent = tokens > 0 ? `🪄 Wave a Magic Wand (${tokens} available)` : '🪄 Wave a Magic Wand';
   if (tokens === 0) {
-    const streak = getStreak();
-    const daysUntilNext = 7 - (streak % 7);
-    fstatus.textContent = `Earn your next forgiveness in ${daysUntilNext} day${daysUntilNext !== 1 ? 's' : ''} (every 7-day streak)`;
+    const daysUntilNext = 14 - (currentCleanRun() % 14);
+    fstatus.textContent = `Next wand in ${daysUntilNext} clean day${daysUntilNext !== 1 ? 's' : ''} (14 days, no misses)`;
     fstatus.className = 'forgive-status';
   } else {
-    fstatus.textContent = `Max 2 banked at once — use them or lose them!`;
+    fstatus.textContent = `Max 2 banked — use them or lose them!`;
     fstatus.className = 'forgive-status used';
   }
 }
@@ -952,18 +1227,23 @@ function toggleExercise(date, exercise, clickEvent) {
     if (clickEvent) {
       spawnBurst(clickEvent.clientX, clickEvent.clientY, 25);
     }
+    Sound.tick();
+    haptic(15);
   } else {
     state.completedDays[date].splice(idx, 1);
   }
-  
+
   save(state);
   render();
-  
+
   const isCompleteNow = isDayComplete(date);
   if (!wasComplete && isCompleteNow) {
+    Sound.complete();
+    haptic([40, 30, 90]);
     setTimeout(() => {
       spawnConfetti(120);
-      
+      spawnStars(window.innerWidth / 2, window.innerHeight * 0.35, 16);
+
       const streak = getStreak();
       if (isMilestoneStreak(streak)) {
         showMilestoneModal(streak);
@@ -1018,6 +1298,8 @@ function closeEditModal() {
 // -- FORGIVENESS --
 function useForgiveness(e) {
   if (getForgivenessTokens() === 0) return;
+  const btn = document.getElementById('forgiveBtn');
+  if (btn) { btn.classList.remove('casting'); void btn.offsetWidth; btn.classList.add('casting'); }
   const today = new Date();
   for (let i = 1; i <= 7; i++) {
     const d = new Date(today);
@@ -1028,13 +1310,29 @@ function useForgiveness(e) {
       state.forgivenDays.push(s);
       save(state);
       render();
-      if (e) {
-        spawnMagicBurst(e.clientX, e.clientY, 35);
-      }
+      Sound.wand();
+      haptic([20, 40, 20, 40, 70]);
+      castWandAt(s, e);
       return;
     }
   }
   alert('No recent missed days found to forgive!');
+}
+
+// Shimmer the just-pardoned day's dot and shower it with wand sparkles. Falls
+// back to the click point if that dot isn't on screen (older than 14 days).
+function castWandAt(dateStr, e) {
+  const dot = document.querySelector('.day-dot[data-date="' + dateStr + '"]');
+  if (dot) {
+    dot.classList.add('just-forgiven');
+    setTimeout(() => dot.classList.remove('just-forgiven'), 1000);
+    const r = dot.getBoundingClientRect();
+    spawnMagicBurst(r.left + r.width / 2, r.top + r.height / 2, 42);
+  } else if (e) {
+    spawnMagicBurst(e.clientX, e.clientY, 42);
+  } else {
+    spawnMagicBurst(window.innerWidth / 2, window.innerHeight / 2, 42);
+  }
 }
 
 // -- RESET --
@@ -1062,7 +1360,7 @@ function checkStreakStatus() {
     if (tokens > 0) {
       msg.innerHTML = `You missed 2 days in a row! Your streak is broken.<br><br>But wait! You have <strong>${tokens}</strong> Forgiveness Token${tokens > 1 ? 's' : ''} banked. Use one now to save your streak and progress?`;
       btnRow.innerHTML = `
-        <button class="btn btn-primary" onclick="useForgivenessFromModal(event)" style="background: var(--forgive); color: #fff; width: 100%; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">🪄 Use Forgiveness Token</button>
+        <button class="btn btn-primary" onclick="useForgivenessFromModal(event)" style="background: var(--forgive); color: #fff; width: 100%; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">🪄 Wave a Magic Wand</button>
         <button class="btn btn-danger" onclick="doResetFromModal()" style="background: var(--danger-light); color: var(--danger); width: 100%; margin-top: 8px; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">Reset Program</button>
       `;
     } else {

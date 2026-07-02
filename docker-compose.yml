@@ -3,8 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # No published port — only Caddy talks to it, over the shared `proxy`
-    # network. Caddy reaches it at the `moro` alias (reverse_proxy moro:8787).
+    # Loopback-only publish, in addition to the shared `proxy` network Caddy
+    # uses (reverse_proxy moro:8787). Not exposed on the LAN interface — only
+    # lets host processes on docker01 itself reach it, so `tailscale serve`
+    # can proxy it onto the tailnet as a second, independent ingress path for
+    # off-LAN access without touching Caddy/DNS at all.
+    ports:
+      - "127.0.0.1:8787:8787"
     networks:
       proxy:
         aliases:

@@ -751,27 +751,62 @@ function save(data) {
 // fallback; /state is the shared source of truth everyone reads & merges into.
 const STATE_PATH = '/state';
 let syncTimer = null;
+let pendingPush = null;
 
 function pushRemote(data) {
+  pendingPush = data;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => {
-    fetch(STATE_PATH, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).catch(() => {}); // offline: local already saved; next load reconciles
-  }, 800);
+  syncTimer = setTimeout(flushPush, 800);
 }
 
+// Send the debounced push now. `keepalive` lets the request outlive the page,
+// so the last checkmark before a tab close/background isn't lost to the debounce.
+function flushPush(keepalive) {
+  clearTimeout(syncTimer);
+  syncTimer = null;
+  if (!pendingPush) return;
+  const body = JSON.stringify(pendingPush);
+  pendingPush = null;
+  fetch(STATE_PATH, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    keepalive: !!keepalive,
+  }).catch(() => {}); // offline: local already saved; next load reconciles
+}
+
+window.addEventListener('pagehide', () => flushPush(true));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    flushPush(true);
+  } else {
+    // Coming back to a tab that may have sat overnight or missed another
+    // device's updates: redraw for the current date and reconcile with remote.
+    render();
+    syncFromRemote();
+  }
+});
+
 // Additive union merge — safe across devices (completions are only ever added).
+// Exception: a program reset must win across devices, or the old startDate /
+// spent wands would just resurrect via the union. The side with the newer
+// resetEpoch contributes startDate + forgiveness wholesale; completions are
+// still unioned (reset intentionally keeps history for the grid).
 function mergeState(a, b) {
+  const ea = a.resetEpoch || 0, eb = b.resetEpoch || 0;
+  const newer = eb > ea ? b : a;
   const out = {
-    startDate: (a.startDate && b.startDate)
-      ? (a.startDate < b.startDate ? a.startDate : b.startDate)
-      : (a.startDate || b.startDate),
+    resetEpoch: Math.max(ea, eb),
+    startDate: (ea === eb)
+      ? ((a.startDate && b.startDate)
+          ? (a.startDate < b.startDate ? a.startDate : b.startDate)
+          : (a.startDate || b.startDate))
+      : newer.startDate,
     completedDays: {},
-    forgivenDays: Array.from(new Set([...(a.forgivenDays||[]), ...(b.forgivenDays||[])])),
-    forgivenUsed: !!(a.forgivenUsed || b.forgivenUsed),
+    forgivenDays: (ea === eb)
+      ? Array.from(new Set([...(a.forgivenDays||[]), ...(b.forgivenDays||[])]))
+      : (newer.forgivenDays || []).slice(),
+    forgivenUsed: (ea === eb) ? !!(a.forgivenUsed || b.forgivenUsed) : !!newer.forgivenUsed,
   };
   for (const src of [a, b]) {
     const cd = src.completedDays || {};
@@ -814,12 +849,14 @@ function initData() {
     completedDays: {},   // 'YYYY-MM-DD': ['Ex1', ...]
     forgivenDays: [],    // ['YYYY-MM-DD', ...]
     forgivenUsed: false,
+    resetEpoch: 0,       // ms timestamp of last program reset (0 = never)
   };
 }
 
 let state = load() || initData();
 if (!state.forgivenDays) state.forgivenDays = [];
 if (state.forgivenUsed === undefined) state.forgivenUsed = false;
+if (!state.resetEpoch) state.resetEpoch = 0;
 
 // -- HELPERS --
 function getWeekForDate(dateStr) {
@@ -1037,8 +1074,10 @@ function updateStreakFlame(streak) {
 let _lastTokens = null;
 
 // -- RENDER --
+let _renderedFor = null; // the 'today' the UI was last drawn for
 function render() {
   const today = todayStr();
+  _renderedFor = today;
   const week = getWeekForDate(today);
   const exercises = SCHEDULE[Math.min(12, Math.max(1, week))] || [];
   const doneFull = state.completedDays[today] || [];
@@ -1343,6 +1382,7 @@ function doReset() {
   const history = state.completedDays;
   state = initData();
   state.completedDays = history; // Retain logs for historical grid display
+  state.resetEpoch = Date.now(); // makes the reset win the cross-device merge
   save(state);
   hideReset();
   render();
@@ -1387,6 +1427,10 @@ function doResetFromModal() {
 
 render();
 syncFromRemote();
+
+// A tab left open past midnight would keep showing yesterday's exercises;
+// redraw when the local date rolls over.
+setInterval(() => { if (_renderedFor !== todayStr()) render(); }, 60000);
 </script>
 </body>
 </html>

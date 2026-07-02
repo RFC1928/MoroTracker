@@ -20,7 +20,7 @@ There are no lint, build, or test commands.
 
 ## Architecture
 
-Everything lives in `index.html` (~1,000 lines), structured in three blocks:
+Everything lives in `index.html` (~1,450 lines), structured in three blocks:
 
 1. **`<style>`** — All CSS, including CSS custom properties, keyframe animations, and mobile-first layout (target viewport: 480px max-width).
 2. **`<body>`** — Static HTML scaffolding for cards, modals, and the header. JavaScript writes dynamic content into these containers.
@@ -37,7 +37,8 @@ All state is stored in `localStorage` under the key `'moroTracker'` as a JSON st
     'YYYY-MM-DD': ['ExerciseName', ...]
   },
   forgivenDays: ['YYYY-MM-DD'],    // days pardoned by forgiveness tokens
-  forgivenUsed: boolean            // whether a token was ever used
+  forgivenUsed: boolean,           // whether a token was ever used
+  resetEpoch: number               // ms timestamp of last program reset (0 = never)
 }
 ```
 
@@ -51,8 +52,13 @@ zero-dependency Python server (`sync-backend/server.py`). That same server also
 serves `index.html`, so the app and its `/state` API are **same-origin** — the
 frontend just fetches the relative path `STATE_PATH = '/state'` (no
 `SYNC_ENDPOINT` host, no CORS). `save()` pushes to `/state` (debounced via
-`pushRemote`); `syncFromRemote()` pulls on load and does an **additive union
-merge** (`mergeState()`) so completions are never lost across devices. In
+`pushRemote`; the pending push is flushed with a `keepalive` fetch on
+`pagehide`/tab-hide so the last action isn't lost); `syncFromRemote()` pulls on
+load and on tab-refocus and does an **additive union merge** (`mergeState()`) so
+completions are never lost across devices. The one exception to the union is a
+program reset: the side with the newer `resetEpoch` wins `startDate` and the
+forgiveness fields outright, so a reset isn't resurrected by another device's
+stale state. In
 production the server runs in a Docker container on docker01 behind Caddy, with
 `moro-state.json` on the persistent `moro_data` volume (see `DEPLOY.md`). The app
 still works fully offline from localStorage when `/state` is unreachable.
@@ -70,7 +76,7 @@ Exercises link out to `brain-sync.net` for instructions.
 ### Streak & Forgiveness Logic
 
 - **Streak** counts consecutive days (backwards from yesterday) where each day is either fully complete or forgiven.
-- **Forgiveness tokens** are earned at every 7-day streak boundary, banked up to a max of 2. Using one pardons the most recent incomplete/unforgiven day within the past 7 days.
+- **Forgiveness tokens** ("magic wands") are earned one per 14 consecutive *fully complete* days — forgiven days reset the earn run (you can't farm wands with wands) — banked up to a max of 2. Using one pardons the most recent incomplete/unforgiven day within the past 7 days.
 - **Milestones** fire at hardcoded day counts (7, 10, 14, 20, 21, 28, 30, 40, 50, 60, 84) and at every multiple of 7 or 10 beyond that. Day 84 is graduation.
 
 ### Visual Effects

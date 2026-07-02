@@ -21,6 +21,7 @@ Config via environment variables:
 import json
 import os
 import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DATA_FILE = os.environ.get('MORO_DATA', os.path.expanduser('~/moro-state.json'))
@@ -28,6 +29,11 @@ STATIC_FILE = os.environ.get(
     'MORO_STATIC', os.path.join(os.path.dirname(__file__), 'index.html'))
 ALLOW_ORIGIN = os.environ.get('MORO_ORIGIN', '*')
 PORT = int(os.environ.get('MORO_PORT', '8787'))
+MAX_BODY = 1024 * 1024  # sane cap; real state is a few KB
+
+# ThreadingHTTPServer handles requests concurrently, but all writers share the
+# same .tmp file — serialize them so concurrent PUTs can't corrupt the store.
+WRITE_LOCK = threading.Lock()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -68,6 +74,7 @@ class Handler(BaseHTTPRequestHandler):
             body = b'{}'
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Cache-Control', 'no-store')
         self._cors()
         self.end_headers()
         self.wfile.write(body)
@@ -75,16 +82,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_PUT(self):
         if self.path != '/state':
             return self._empty(404)
-        length = int(self.headers.get('Content-Length', 0))
+        try:
+            length = int(self.headers.get('Content-Length') or 0)
+        except ValueError:
+            return self._empty(400)
+        if length <= 0:
+            return self._empty(400)
+        if length > MAX_BODY:
+            return self._empty(413)
         raw = self.rfile.read(length)
         try:
             data = json.loads(raw)  # validate it is JSON before saving
         except Exception:
             return self._empty(400)
         tmp = DATA_FILE + '.tmp'
-        with open(tmp, 'w') as f:
-            json.dump(data, f)
-        os.replace(tmp, DATA_FILE)  # atomic replace
+        with WRITE_LOCK:
+            with open(tmp, 'w') as f:
+                json.dump(data, f)
+            os.replace(tmp, DATA_FILE)  # atomic replace
         self._empty(204)
 
     def log_message(self, *args):

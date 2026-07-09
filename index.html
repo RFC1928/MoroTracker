@@ -1196,6 +1196,9 @@ function render() {
       else cls += ' missed';
       if (isToday) cls += ' today';
       el.className = cls;
+      // Tap a past day to log exercises you did but forgot to record.
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => openEditModal(s, new Date(d)));
       if (forgiven) {
         const fi = document.createElement('span');
         fi.className = 'forgive-icon'; fi.textContent = '🪄';
@@ -1331,6 +1334,10 @@ function closeModal(e) {
 function closeEditModal() {
   document.getElementById('editModal').classList.remove('show');
   _editDate = null;
+  if (_backfillQueue) {
+    continueBackfill();
+    return;
+  }
   render();
 }
 
@@ -1390,29 +1397,71 @@ function doReset() {
 
 // -- STREAK SAFETY CHECKS --
 function checkStreakStatus() {
-  const missed = getMissedDays();
   const modal = document.getElementById('streakBrokenModal');
+  // Don't pop over the edit modal: toggling exercises re-renders (and so
+  // re-checks) on every tap while someone is mid-backfill.
+  if (document.getElementById('editModal').classList.contains('show')) {
+    modal.classList.remove('show');
+    return;
+  }
+  const missed = getMissedDays();
   const msg = document.getElementById('streakBrokenMessage');
   const btnRow = document.getElementById('streakBrokenButtons');
-  
+
+  const logBtn = `
+        <button class="btn btn-primary" onclick="startBackfill()" style="background: var(--primary); color: #fff; width: 100%; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">📝 I did them — log missed days</button>`;
+
   if (missed >= 2) {
     const tokens = getForgivenessTokens();
     if (tokens > 0) {
-      msg.innerHTML = `You missed 2 days in a row! Your streak is broken.<br><br>But wait! You have <strong>${tokens}</strong> Forgiveness Token${tokens > 1 ? 's' : ''} banked. Use one now to save your streak and progress?`;
-      btnRow.innerHTML = `
-        <button class="btn btn-primary" onclick="useForgivenessFromModal(event)" style="background: var(--forgive); color: #fff; width: 100%; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">🪄 Wave a Magic Wand</button>
+      msg.innerHTML = `You missed 2 days in a row! Your streak is broken.<br><br>Did the exercises but forgot to log them? Log them now. Or use one of your <strong>${tokens}</strong> banked Forgiveness Token${tokens > 1 ? 's' : ''}.`;
+      btnRow.innerHTML = logBtn + `
+        <button class="btn btn-primary" onclick="useForgivenessFromModal(event)" style="background: var(--forgive); color: #fff; width: 100%; margin-top: 8px; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">🪄 Wave a Magic Wand</button>
         <button class="btn btn-danger" onclick="doResetFromModal()" style="background: var(--danger-light); color: var(--danger); width: 100%; margin-top: 8px; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">Reset Program</button>
       `;
     } else {
-      msg.innerHTML = `You missed 2 days in a row and have no Forgiveness Tokens banked.<br><br>Your progress will be reset, and you'll start fresh from Week 1. You got this!`;
-      btnRow.innerHTML = `
-        <button class="btn btn-danger" onclick="doResetFromModal()" style="background: var(--danger); color: #fff; width: 100%; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">Restart Program</button>
+      msg.innerHTML = `You missed 2 days in a row and have no Forgiveness Tokens banked.<br><br>If you did the exercises and just forgot to log them, log them now — otherwise the program resets to Week 1.`;
+      btnRow.innerHTML = logBtn + `
+        <button class="btn btn-danger" onclick="doResetFromModal()" style="background: var(--danger); color: #fff; width: 100%; margin-top: 8px; border: none; font-size: 0.95rem; font-weight: 800; padding: 13px; border-radius: 14px; cursor: pointer;">Restart Program</button>
       `;
     }
     modal.classList.add('show');
   } else {
     modal.classList.remove('show');
   }
+}
+
+// -- BACKFILL MISSED DAYS --
+// Walks the edit modal through each incomplete day among the last two, oldest
+// first. The queue advances on modal close regardless of completion so a
+// user who bails isn't trapped in a loop; if days remain unlogged when the
+// queue empties, render() -> checkStreakStatus() brings the choice back.
+let _backfillQueue = null;
+
+function startBackfill() {
+  document.getElementById('streakBrokenModal').classList.remove('show');
+  const today = new Date();
+  _backfillQueue = [];
+  for (let i = 2; i >= 1; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const s = toLocalYMD(d);
+    if (s >= state.startDate && !isDayComplete(s) && !isForgiven(s)) {
+      _backfillQueue.push(s);
+    }
+  }
+  continueBackfill();
+}
+
+function continueBackfill() {
+  const next = _backfillQueue && _backfillQueue.shift();
+  if (!next) {
+    _backfillQueue = null;
+    render();
+    return;
+  }
+  const [y, m, dd] = next.split('-').map(Number);
+  openEditModal(next, new Date(y, m - 1, dd));
 }
 
 function useForgivenessFromModal(e) {

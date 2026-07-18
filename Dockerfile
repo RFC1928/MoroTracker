@@ -9,7 +9,10 @@ COPY sync-backend/server.py /app/server.py
 COPY index.html /app/index.html
 
 # State persists on an external volume mounted at /app/data (see compose).
-# No TZ: the server does no date math — streak/day logic is all client-side.
+# tzdata: alpine ships no zone files, and /nag needs zoneinfo to know what
+# "today" and "10 PM" mean in MORO_TZ (streak logic is still client-side).
+RUN apk add --no-cache tzdata
+
 ENV MORO_DATA=/app/data/moro-state.json \
     MORO_STATIC=/app/index.html \
     MORO_PORT=8787

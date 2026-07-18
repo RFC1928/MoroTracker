@@ -16,9 +16,12 @@ services:
           - moro
     volumes:
       - data:/app/data
-    # No TZ needed: the server does zero date math — it just stores the JSON
-    # blob. All streak / forgiveness / day-boundary logic runs client-side in the
-    # browser using each user's own local time.
+    # Streak/forgiveness logic is still all client-side, but /nag (the Uptime
+    # Kuma don't-forget check) does server-side date math: it needs to know
+    # what "today" and the 22:00 cutoff mean in the family's local time.
+    environment:
+      MORO_TZ: America/New_York
+      MORO_NAG_CUTOFF: "22:00"
     restart: unless-stopped
 
 networks:

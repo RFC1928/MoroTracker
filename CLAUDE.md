@@ -36,9 +36,10 @@ All state is stored in `localStorage` under the key `'moroTracker'` as a JSON st
   completedDays: {                  // exercises done per day
     'YYYY-MM-DD': ['ExerciseName', ...]
   },
-  forgivenDays: ['YYYY-MM-DD'],    // days pardoned by forgiveness tokens
+  forgivenDays: ['YYYY-MM-DD'],    // pardoned days (wand casts AND stage-repeat pardons)
   forgivenUsed: boolean,           // whether a token was ever used
-  resetEpoch: number               // ms timestamp of last program reset (0 = never)
+  wandsSpent: number,              // wand casts only — what counts against the token bank
+  resetEpoch: number               // ms timestamp of last program reset or stage repeat (0 = never)
 }
 ```
 
@@ -76,7 +77,9 @@ Exercises link out to `brain-sync.net` for instructions.
 ### Streak & Forgiveness Logic
 
 - **Streak** counts consecutive days (backwards from yesterday) where each day is either fully complete or forgiven.
-- **Forgiveness tokens** ("magic wands") are earned one per 14 consecutive *fully complete* days — forgiven days reset the earn run (you can't farm wands with wands) — banked up to a max of 2. Using one pardons the most recent incomplete/unforgiven day within the past 7 days.
+- **Day completeness**: today must cover the current week's exercise set exactly; a *past* day also counts complete if it fully covered *some* stage's set — this keeps history green when a stage repeat shifts `startDate` and remaps old days onto different weeks.
+- **Forgiveness tokens** ("magic wands") are earned one per 14 consecutive *fully complete* days — forgiven days reset the earn run (you can't farm wands with wands) — banked up to a max of 2. Only `wandsSpent` counts against the bank; stage-repeat pardons in `forgivenDays` don't. Using one pardons the most recent incomplete/unforgiven day within the past 7 days.
+- **Two consecutive missed days** no longer resets the program to week 1 (OT guidance: a lapse means repeating the *current exercise*, never regressing through mastered stages). The streak-broken modal offers backfill, a wand (if banked), or **Repeat This Stage** — `repeatStage()` shifts `startDate` so today becomes day 1 of the current stage's first week (stages are odd-week-anchored pairs), pardons the lapse tail, and bumps `resetEpoch` so the repeat wins the cross-device merge. Full reset to week 1 remains available only as the manual settings action.
 - **Milestones** fire at hardcoded day counts (7, 10, 14, 20, 21, 28, 30, 40, 50, 60, 84) and at every multiple of 7 or 10 beyond that. Day 84 is graduation.
 
 ### Visual Effects
